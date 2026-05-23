@@ -1,11 +1,12 @@
 import { defineConfig, devices } from '@playwright/test'
+const CI = process.env.CI ?? false
 
 export default defineConfig({
   testDir: './tests',
   fullyParallel: true,
-  forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  forbidOnly: !!CI,
+  retries: CI ? 2 : 0,
+  workers: CI ? 1 : undefined,
   reporter: 'html',
   use: {
     baseURL: 'http://localhost:3000',
@@ -13,14 +14,14 @@ export default defineConfig({
   },
   projects: [
     {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      name: 'chrome',
+      use: { ...devices['Desktop Chrome'], channel: 'chrome' },
     },
   ],
   webServer: {
     command: 'npm run dev',
     url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: !CI,
     timeout: 30_000,
   },
 })
