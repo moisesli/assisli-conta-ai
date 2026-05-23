@@ -9,7 +9,7 @@
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "test": "playwright test",
-    "test:ui": "playwright test --ui"
+    "test:ui": "playwright test --ui --ui-host=127.0.0.1"
   },
   "dependencies": {
     "@nuxtjs/supabase": "^2.0.9",
