@@ -18,8 +18,8 @@ test.describe("Auth protection (middleware)", () => {
     }) => {
       await page.goto("/login");
       await page.waitForLoadState("networkidle");
-      await page.getByPlaceholder("Email").fill(TEST_EMAIL);
-      await page.getByPlaceholder("Contraseña").fill(TEST_PASSWORD);
+      await page.getByPlaceholder("m@example.com").fill(TEST_EMAIL);
+      await page.getByLabel("Contraseña").fill(TEST_PASSWORD);
       await page.getByRole("button", { name: "Iniciar sesión" }).click();
 
       await page.waitForURL("**/dashboard", { timeout: 15000 });
@@ -32,8 +32,8 @@ test.describe("Auth protection (middleware)", () => {
     test("CA3: /login con sesión redirige a /dashboard", async ({ page }) => {
       await page.goto("/login");
       await page.waitForLoadState("networkidle");
-      await page.getByPlaceholder("Email").fill(TEST_EMAIL);
-      await page.getByPlaceholder("Contraseña").fill(TEST_PASSWORD);
+      await page.getByPlaceholder("m@example.com").fill(TEST_EMAIL);
+      await page.getByLabel("Contraseña").fill(TEST_PASSWORD);
       await page.getByRole("button", { name: "Iniciar sesión" }).click();
       await page.waitForURL("**/dashboard", { timeout: 15000 });
 
@@ -48,8 +48,8 @@ test.describe("Auth protection (middleware)", () => {
     }) => {
       await page.goto("/login");
       await page.waitForLoadState("networkidle");
-      await page.getByPlaceholder("Email").fill(TEST_EMAIL);
-      await page.getByPlaceholder("Contraseña").fill(TEST_PASSWORD);
+      await page.getByPlaceholder("m@example.com").fill(TEST_EMAIL);
+      await page.getByLabel("Contraseña").fill(TEST_PASSWORD);
       await page.getByRole("button", { name: "Iniciar sesión" }).click();
       await page.waitForURL("**/dashboard", { timeout: 15000 });
 

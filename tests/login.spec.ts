@@ -6,8 +6,8 @@ test.describe("Login flow", () => {
       await page.goto("/login");
       await page.waitForLoadState("networkidle");
 
-      await expect(page.getByPlaceholder("Email")).toBeVisible();
-      await expect(page.getByPlaceholder("Contraseña")).toBeVisible();
+      await expect(page.getByPlaceholder("m@example.com")).toBeVisible();
+      await expect(page.getByLabel("Contraseña")).toBeVisible();
       await expect(
         page.getByRole("button", { name: "Iniciar sesión" }),
       ).toBeVisible();
@@ -20,10 +20,12 @@ test.describe("Login flow", () => {
     }) => {
       await page.goto("/login");
       await page.waitForLoadState("networkidle");
-      await page.getByPlaceholder("Contraseña").fill("123456");
+      await page.getByLabel("Contraseña").fill("123456");
       await page.getByRole("button", { name: "Iniciar sesión" }).click();
 
-      await expect(page.getByPlaceholder("Email")).toHaveAttribute("required");
+      await expect(page.getByPlaceholder("m@example.com")).toHaveAttribute(
+        "required",
+      );
     });
   });
 
@@ -35,8 +37,8 @@ test.describe("Login flow", () => {
 
       await page.goto("/login");
       await page.waitForLoadState("networkidle");
-      await page.getByPlaceholder("Email").fill(TEST_EMAIL);
-      await page.getByPlaceholder("Contraseña").fill("123456");
+      await page.getByPlaceholder("m@example.com").fill(TEST_EMAIL);
+      await page.getByLabel("Contraseña").fill("123456");
       await page.getByRole("button", { name: "Iniciar sesión" }).click();
 
       await page.waitForURL("**/dashboard", { timeout: 8000 });
@@ -47,8 +49,8 @@ test.describe("Login flow", () => {
     test("debe mostrar error con credenciales inválidas", async ({ page }) => {
       await page.goto("/login");
       await page.waitForLoadState("networkidle");
-      await page.getByPlaceholder("Email").fill("noexiste@test.com");
-      await page.getByPlaceholder("Contraseña").fill("wrongpassword");
+      await page.getByPlaceholder("m@example.com").fill("noexiste@test.com");
+      await page.getByLabel("Contraseña").fill("wrongpassword");
       await page.getByRole("button", { name: "Iniciar sesión" }).click();
 
       await expect(
