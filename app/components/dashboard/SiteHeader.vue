@@ -1,14 +1,6 @@
 <script setup lang="ts">
-import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-
-const supabase = useSupabaseClient();
-
-async function handleLogout() {
-  await supabase.auth.signOut();
-  await navigateTo("/login");
-}
 </script>
 
 <template>
@@ -21,12 +13,7 @@ async function handleLogout() {
         orientation="vertical"
         class="mx-2 data-[orientation=vertical]:h-4"
       />
-      <h1 class="text-base font-medium">Dashboard</h1>
-      <div class="ml-auto flex items-center gap-2">
-        <Button variant="ghost" size="sm" @click="handleLogout">
-          Cerrar sesión
-        </Button>
-      </div>
+      <h1 class="text-base font-medium">Documents</h1>
     </div>
   </header>
 </template>
