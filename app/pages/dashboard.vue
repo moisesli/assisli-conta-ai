@@ -6,12 +6,7 @@ import SectionCards from "@/components/dashboard/SectionCards.vue";
 </script>
 
 <template>
-  <SidebarProvider
-    :style="{
-      '--sidebar-width': 'calc(var(--spacing) * 72)',
-      '--header-height': 'calc(var(--spacing) * 12)',
-    }"
-  >
+  <SidebarProvider>
     <AppSidebar />
     <SidebarInset>
       <SiteHeader />
