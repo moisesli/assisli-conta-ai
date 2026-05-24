@@ -37,8 +37,8 @@ async function handleRegister() {
   if (error) {
     errorMsg.value = error.message;
   } else {
-    // Registro exitoso — redirige a confirmación
-    await navigateTo("/confirm");
+    // Registro exitoso — redirige al dashboard
+    await navigateTo("/dashboard");
   }
   loading.value = false;
 }

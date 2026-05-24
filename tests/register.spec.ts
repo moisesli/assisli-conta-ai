@@ -49,11 +49,10 @@ test.describe("Register flow", () => {
   });
 
   test.describe("Registro exitoso E2E", () => {
-    test("debe redirigir a /confirm al registrarse exitosamente", async ({
-      page,
-    }) => {
-      const TEST_EMAIL = "amoiseslinares@gmail.com";
+    test("debe registrar y llegar a /dashboard", async ({ page }) => {
+      const TEST_EMAIL = `e2e_${Date.now()}@test.com`;
 
+      // 1. Registrar nuevo usuario
       await page.goto("/register");
       await page.waitForLoadState("networkidle");
       await page.getByPlaceholder("Nombre (opcional)").fill("Juan");
@@ -63,7 +62,12 @@ test.describe("Register flow", () => {
       await page.getByPlaceholder("Confirmar contraseña").fill("123456");
       await page.getByRole("button", { name: "Registrarse" }).click();
 
-      await page.waitForURL("**/confirm", { timeout: 8000 });
+      // 2. Redirige a /dashboard (sesión activa)
+      await page.waitForURL("**/dashboard", { timeout: 15000 });
+
+      await expect(
+        page.getByText("Bienvenido al panel de control"),
+      ).toBeVisible({ timeout: 5000 });
     });
   });
 
