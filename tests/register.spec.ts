@@ -52,7 +52,7 @@ test.describe("Register flow", () => {
     test("debe redirigir a /confirm al registrarse exitosamente", async ({
       page,
     }) => {
-      const TEST_EMAIL = `e2e_${Date.now()}@test.com`;
+      const TEST_EMAIL = "amoiseslinares@gmail.com";
 
       await page.goto("/register");
       await page.waitForLoadState("networkidle");
@@ -73,7 +73,7 @@ test.describe("Register flow", () => {
     }) => {
       await page.goto("/register");
       await page.waitForLoadState("networkidle");
-      await page.getByPlaceholder("Email").fill("moises.garcia@gmail.com");
+      await page.getByPlaceholder("Email").fill("amoiseslinares@gmail.com");
       await page.getByPlaceholder("Contraseña", { exact: true }).fill("123456");
       await page.getByPlaceholder("Confirmar contraseña").fill("123456");
       await page.getByRole("button", { name: "Registrarse" }).click();
