@@ -29,7 +29,7 @@ async function handleLogin() {
 </script>
 
 <template>
-  <div class="w-full max-w-sm">
+  <div class="flex flex-col gap-6">
     <Card>
       <CardHeader class="text-center">
         <CardTitle class="text-xl">Iniciar sesión</CardTitle>
@@ -61,10 +61,14 @@ async function handleLogin() {
               </Button>
             </Field>
 
-            <FieldSeparator>O continúa con</FieldSeparator>
+            <FieldSeparator
+              class="*:data-[slot=field-separator-content]:bg-card"
+            >
+              O continúa con
+            </FieldSeparator>
 
             <Field>
-              <Label for="email">Email</Label>
+              <FieldLabel for="email">Email</FieldLabel>
               <Input
                 id="email"
                 v-model="email"
@@ -76,7 +80,13 @@ async function handleLogin() {
 
             <Field>
               <div class="flex items-center">
-                <Label for="password">Contraseña</Label>
+                <FieldLabel for="password">Contraseña</FieldLabel>
+                <a
+                  href="#"
+                  class="ml-auto text-sm underline-offset-4 hover:underline"
+                >
+                  ¿Olvidaste tu contraseña?
+                </a>
               </div>
               <Input
                 id="password"
@@ -103,5 +113,11 @@ async function handleLogin() {
         </form>
       </CardContent>
     </Card>
+    <FieldDescription class="px-6 text-center text-balance">
+      Al continuar, aceptas nuestros
+      <a href="#">Términos de Servicio</a>
+      y
+      <a href="#">Política de Privacidad</a>.
+    </FieldDescription>
   </div>
 </template>
