@@ -45,149 +45,105 @@ async function handleRegister() {
 </script>
 
 <template>
-  <div class="register-container">
-    <div class="register-card">
-      <h1 class="title">Crear cuenta</h1>
+  <div class="flex flex-col gap-6 w-full max-w-md">
+    <Card>
+      <CardHeader class="text-center">
+        <CardTitle class="text-xl">Crear cuenta</CardTitle>
+        <CardDescription>
+          Ingresa tus datos para crear tu cuenta
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form @submit.prevent="handleRegister">
+          <FieldGroup>
+            <Field>
+              <Button variant="outline" type="button" class="w-full">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                  <path
+                    d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"
+                    fill="currentColor"
+                  />
+                </svg>
+                Google
+              </Button>
+            </Field>
 
-      <form @submit.prevent="handleRegister" class="form">
-        <input
-          v-model="firstName"
-          type="text"
-          placeholder="Nombre (opcional)"
-          class="input"
-        />
-        <input
-          v-model="lastName"
-          type="text"
-          placeholder="Apellido (opcional)"
-          class="input"
-        />
-        <input
-          v-model="email"
-          type="email"
-          placeholder="Email"
-          required
-          class="input"
-        />
-        <input
-          v-model="password"
-          type="password"
-          placeholder="Contraseña"
-          required
-          minlength="6"
-          class="input"
-        />
-        <input
-          v-model="confirmPassword"
-          type="password"
-          placeholder="Confirmar contraseña"
-          required
-          minlength="6"
-          class="input"
-        />
+            <Field>
+              <FieldLabel for="name">Nombre completo</FieldLabel>
+              <div class="grid grid-cols-2 gap-4">
+                <Input
+                  id="first-name"
+                  v-model="firstName"
+                  type="text"
+                  placeholder="Nombre"
+                />
+                <Input
+                  id="last-name"
+                  v-model="lastName"
+                  type="text"
+                  placeholder="Apellido"
+                />
+              </div>
+            </Field>
 
-        <p v-if="errorMsg" class="error">{{ errorMsg }}</p>
+            <Field>
+              <FieldLabel for="email">Email</FieldLabel>
+              <Input
+                id="email"
+                v-model="email"
+                type="email"
+                placeholder="m@example.com"
+                required
+              />
+            </Field>
 
-        <button type="submit" :disabled="loading" class="btn btn-primary">
-          {{ loading ? "Creando cuenta..." : "Registrarse" }}
-        </button>
-      </form>
+            <Field>
+              <FieldLabel for="password">Contraseña</FieldLabel>
+              <Input
+                id="password"
+                v-model="password"
+                type="password"
+                required
+                minlength="6"
+              />
+              <FieldDescription>Mínimo 6 caracteres</FieldDescription>
+            </Field>
 
-      <p class="login-link">
-        ¿Ya tienes cuenta?
-        <NuxtLink to="/login">Inicia sesión</NuxtLink>
-      </p>
-    </div>
+            <Field>
+              <FieldLabel for="confirm-password"
+                >Confirmar contraseña</FieldLabel
+              >
+              <Input
+                id="confirm-password"
+                v-model="confirmPassword"
+                type="password"
+                required
+                minlength="6"
+              />
+            </Field>
+
+            <p v-if="errorMsg" class="text-sm text-destructive text-center">
+              {{ errorMsg }}
+            </p>
+
+            <Field>
+              <Button type="submit" class="w-full" :disabled="loading">
+                {{ loading ? "Creando cuenta..." : "Crear cuenta" }}
+              </Button>
+              <FieldDescription class="text-center">
+                ¿Ya tienes cuenta?
+                <NuxtLink to="/login">Inicia sesión</NuxtLink>
+              </FieldDescription>
+            </Field>
+          </FieldGroup>
+        </form>
+      </CardContent>
+    </Card>
+    <FieldDescription class="px-6 text-center text-balance">
+      Al continuar, aceptas nuestros
+      <a href="#">Términos de Servicio</a>
+      y
+      <a href="#">Política de Privacidad</a>.
+    </FieldDescription>
   </div>
 </template>
-
-<style scoped>
-.register-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  background: #f5f7fa;
-}
-
-.register-card {
-  background: white;
-  padding: 2.5rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
-  width: 100%;
-  max-width: 420px;
-}
-
-.title {
-  text-align: center;
-  margin-bottom: 1.5rem;
-  font-size: 1.5rem;
-  color: #1a1a2e;
-}
-
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.input {
-  padding: 0.75rem 1rem;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  font-size: 1rem;
-  outline: none;
-  transition: border-color 0.2s;
-}
-
-.input:focus {
-  border-color: #3b82f6;
-}
-
-.btn {
-  padding: 0.75rem;
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.btn-primary {
-  background: #3b82f6;
-  color: white;
-  margin-top: 0.5rem;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: #2563eb;
-}
-
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.error {
-  color: #ef4444;
-  font-size: 0.875rem;
-  text-align: center;
-}
-
-.login-link {
-  text-align: center;
-  margin-top: 1.25rem;
-  font-size: 0.875rem;
-  color: #6b7280;
-}
-
-.login-link a {
-  color: #3b82f6;
-  text-decoration: none;
-}
-
-.login-link a:hover {
-  text-decoration: underline;
-}
-</style>

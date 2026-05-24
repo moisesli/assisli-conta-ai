@@ -29,7 +29,7 @@ async function handleLogin() {
 </script>
 
 <template>
-  <div class="flex flex-col gap-6">
+  <div class="flex flex-col gap-6 w-full max-w-sm">
     <Card>
       <CardHeader class="text-center">
         <CardTitle class="text-xl">Iniciar sesión</CardTitle>
