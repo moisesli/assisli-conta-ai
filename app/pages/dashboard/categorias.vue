@@ -18,6 +18,7 @@ import {
   IconClock,
   IconDotsVertical,
   IconEdit,
+  IconFolder,
   IconHash,
   IconPlus,
   IconSearch,
@@ -241,10 +242,18 @@ watch(
 </script>
 
 <template>
-  <div class="w-full max-w-5xl mx-auto">
+  <div class="w-full max-w-4xl mx-auto mt-6">
     <div class="flex flex-col gap-3 p-3 md:p-4">
       <div class="flex items-center justify-between gap-3">
-        <h1 class="text-lg font-semibold tracking-tight">Categorías</h1>
+        <div class="flex items-center gap-2">
+          <IconFolder class="text-muted-foreground h-5 w-5" />
+          <div>
+            <h1 class="text-lg font-semibold tracking-tight">Categorías</h1>
+            <p class="text-muted-foreground text-xs leading-none">
+              Administra tus categorías de gastos
+            </p>
+          </div>
+        </div>
         <div class="flex items-center gap-2">
           <div class="relative w-48">
             <IconSearch
@@ -287,9 +296,7 @@ watch(
                 ><IconHash class="mx-auto h-3.5 w-3.5"
               /></TableHead>
               <TableHead>Nombre</TableHead>
-              <TableHead class="hidden md:table-cell w-36"
-                >Descripción</TableHead
-              >
+              <TableHead class="hidden md:table-cell">Descripción</TableHead>
               <TableHead class="w-24">Tipo</TableHead>
               <TableHead class="w-20">Ciclo</TableHead>
               <TableHead class="w-10"
@@ -320,7 +327,7 @@ watch(
                 >{{ categoria.id }}</TableCell
               >
               <TableCell class="font-medium">{{ categoria.nombre }}</TableCell>
-              <TableCell class="hidden md:table-cell w-36 truncate">{{
+              <TableCell class="hidden md:table-cell max-w-48 truncate">{{
                 categoria.descripcion || "—"
               }}</TableCell>
               <TableCell class="w-24">
