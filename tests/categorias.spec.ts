@@ -77,7 +77,8 @@ test.describe("Categorias", () => {
     await expect(page.getByText(originalName)).toBeVisible();
 
     const row = page.getByRole("row", { name: new RegExp(originalName, "i") });
-    await row.getByRole("button", { name: /editar/i }).click();
+    await row.getByRole("button", { name: /acciones/i }).click();
+    await row.getByRole("button", { name: /^Editar$/ }).click();
     await expect(
       page.getByRole("dialog", { name: /editar categoría/i }),
     ).toBeVisible();
@@ -107,7 +108,8 @@ test.describe("Categorias", () => {
     await expect(page.getByText(categoryName)).toBeVisible();
 
     const row = page.getByRole("row", { name: new RegExp(categoryName, "i") });
-    await row.getByRole("button", { name: /eliminar/i }).click();
+    await row.getByRole("button", { name: /acciones/i }).click();
+    await row.getByRole("button", { name: /^Eliminar$/ }).click();
     await expect(
       page.getByRole("dialog", { name: /eliminar categoría/i }),
     ).toBeVisible();

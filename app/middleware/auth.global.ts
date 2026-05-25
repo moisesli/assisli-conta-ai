@@ -1,18 +1,12 @@
 export default defineNuxtRouteMiddleware(async (to) => {
-  const user = useSupabaseUser();
   const supabase = useSupabaseClient();
-  const client = process.client;
 
   const protectedRoutes = ["/dashboard"];
   const guestOnlyRoutes = ["/login", "/register"];
 
-  // Intentar obtener el usuario. En cliente, si useSupabaseUser() aún
-  // no se actualizó (ej: justo después de login), leer sesión directo.
-  let isAuthenticated = !!user.value;
-  if (!isAuthenticated && client) {
-    const { data } = await supabase.auth.getSession();
-    isAuthenticated = !!data.session;
-  }
+  // Obtener usuario verificado desde el servidor de Auth
+  const { data } = await supabase.auth.getUser();
+  const isAuthenticated = !!data.user;
 
   // Si no hay usuario autenticado y la ruta está protegida
   if (

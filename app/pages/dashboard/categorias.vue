@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, ref, watch } from "vue";
+import { onMounted, onUnmounted, reactive, ref, watch } from "vue";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -19,6 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { IconDotsVertical } from "@tabler/icons-vue";
 import type { Database } from "@/types/database.types";
 
 type Categoria = {
@@ -47,6 +48,31 @@ const formOpen = ref(false);
 const deleteOpen = ref(false);
 const formMode = ref<"create" | "edit">("create");
 const activeCategory = ref<Categoria | null>(null);
+
+const openMenuId = ref<number | null>(null);
+
+function toggleMenu(id: number) {
+  openMenuId.value = openMenuId.value === id ? null : id;
+}
+
+function closeMenu() {
+  openMenuId.value = null;
+}
+
+function handleClickOutside(e: MouseEvent) {
+  const target = e.target as HTMLElement;
+  if (!target.closest("[data-action-menu]")) {
+    closeMenu();
+  }
+}
+
+onMounted(() => {
+  document.addEventListener("click", handleClickOutside);
+});
+
+onUnmounted(() => {
+  document.removeEventListener("click", handleClickOutside);
+});
 
 const form = reactive({
   nombre: "",
@@ -211,16 +237,10 @@ async function deleteCategory() {
 }
 
 async function resolveUserId() {
-  // Intentar obtener ID desde useSupabaseUser
-  if (user.value?.id) {
-    currentUserId.value = user.value.id;
-    return true;
-  }
-
-  // Fallback: leer sesión directamente
-  const { data } = await supabase.auth.getSession();
-  if (data.session?.user?.id) {
-    currentUserId.value = data.session.user.id;
+  // Obtener usuario verificado desde el servidor de Auth
+  const { data } = await supabase.auth.getUser();
+  if (data.user?.id) {
+    currentUserId.value = data.user.id;
     return true;
   }
 
@@ -259,9 +279,9 @@ watch(
       </p>
     </section>
 
-    <section class="rounded-xl border bg-card shadow-sm">
+    <div class="overflow-hidden rounded-lg border">
       <Table>
-        <TableHeader>
+        <TableHeader class="bg-muted sticky top-0 z-10">
           <TableRow>
             <TableHead>Nombre</TableHead>
             <TableHead>Descripción</TableHead>
@@ -270,7 +290,7 @@ watch(
             <TableHead class="text-right">Acciones</TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody>
+        <TableBody class="**:data-[slot=table-cell]:first:w-8">
           <TableRow v-if="loading">
             <TableCell
               colspan="5"
@@ -300,28 +320,47 @@ watch(
                   : "Mensual"
               }}
             </TableCell>
-            <TableCell class="text-right">
-              <div class="flex justify-end gap-2">
+            <TableCell class="text-right" data-action-menu>
+              <div class="relative inline-flex">
                 <Button
-                  variant="outline"
-                  size="sm"
-                  @click="openEditDialog(categoria)"
+                  variant="ghost"
+                  size="icon"
+                  class="h-8 w-8"
+                  @click.stop="toggleMenu(categoria.id)"
                 >
-                  Editar
+                  <IconDotsVertical class="h-4 w-4" />
+                  <span class="sr-only">Acciones</span>
                 </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  @click="openDeleteDialog(categoria)"
+                <div
+                  v-if="openMenuId === categoria.id"
+                  class="ring-foreground/10 bg-popover text-popover-foreground absolute right-0 top-full z-50 mt-1 min-w-32 rounded-lg p-1 shadow-md ring-1"
                 >
-                  Eliminar
-                </Button>
+                  <button
+                    class="hover:bg-accent hover:text-accent-foreground flex w-full cursor-pointer items-center rounded-md px-2 py-1.5 text-sm outline-none"
+                    @click.stop="
+                      openEditDialog(categoria);
+                      closeMenu();
+                    "
+                  >
+                    Editar
+                  </button>
+                  <div class="bg-border mx-2 my-0.5 h-px" />
+                  <button
+                    class="hover:bg-accent hover:text-accent-foreground text-destructive flex w-full cursor-pointer items-center rounded-md px-2 py-1.5 text-sm outline-none"
+                    @click.stop="
+                      openDeleteDialog(categoria);
+                      closeMenu();
+                    "
+                  >
+                    Eliminar
+                  </button>
+                </div>
               </div>
             </TableCell>
           </TableRow>
         </TableBody>
       </Table>
-    </section>
+    </div>
 
     <Dialog v-model:open="formOpen">
       <DialogContent class="sm:max-w-lg">
