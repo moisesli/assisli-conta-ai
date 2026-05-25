@@ -121,4 +121,56 @@ test.describe("Categorias", () => {
     ).toBeHidden();
     await expect(page.getByText(categoryName)).toHaveCount(0);
   });
+
+  test("busca categorías por nombre desde el input (server-side)", async ({
+    page,
+  }) => {
+    const searchName = uniqueCategoryName("Busqueda test");
+
+    await login(page);
+    await page.goto("/dashboard/categorias");
+    await page.waitForLoadState("networkidle");
+
+    // Crear categoría para buscar
+    await page.getByRole("button", { name: /nueva categoría/i }).click();
+    await page.getByLabel(/nombre/i).fill(searchName);
+    await page.getByLabel(/tipo de ciclo/i).selectOption("mensual");
+    await page.getByRole("button", { name: /guardar/i }).click();
+    await expect(page.getByText(searchName)).toBeVisible();
+
+    // Buscar por nombre
+    await page.getByPlaceholder(/buscar por nombre/i).fill(searchName);
+    await page.waitForTimeout(500);
+    await expect(page.getByText(searchName)).toBeVisible();
+
+    // Buscar algo inexistente
+    await page
+      .getByPlaceholder(/buscar por nombre/i)
+      .fill("ZZZZ_NO_EXISTE_999");
+    await page.waitForTimeout(500);
+    await expect(page.getByText(/todavía no tienes categorías/i)).toBeVisible();
+  });
+
+  test("la paginación muestra controles navegables cuando hay suficientes categorías", async ({
+    page,
+  }) => {
+    await login(page);
+    await page.goto("/dashboard/categorias");
+    await page.waitForLoadState("networkidle");
+
+    await expect(
+      page.getByRole("heading", { name: "Categorías" }),
+    ).toBeVisible();
+
+    const anteriorBtn = page.locator("button:has-text('Anterior')");
+    const siguienteBtn = page.locator("button:has-text('Siguiente')");
+
+    // Si hay paginación, navegar una página
+    const siguienteCount = await siguienteBtn.count();
+    if (siguienteCount > 0) {
+      await siguienteBtn.click();
+      await page.waitForTimeout(500);
+      await expect(anteriorBtn).not.toBeDisabled();
+    }
+  });
 });

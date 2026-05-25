@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, reactive, ref, watch } from "vue";
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from "vue";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -26,8 +26,11 @@ import {
   IconDotsVertical,
   IconEdit,
   IconHash,
+  IconPlus,
+  IconSearch,
   IconTrash,
 } from "@tabler/icons-vue";
+import { refDebounced } from "@vueuse/core";
 import type { Database } from "@/types/database.types";
 
 type Categoria = {
@@ -58,6 +61,14 @@ const formMode = ref<"create" | "edit">("create");
 const activeCategory = ref<Categoria | null>(null);
 
 const openMenuId = ref<number | null>(null);
+const searchQuery = ref("");
+const searchQueryDebounced = refDebounced(searchQuery, 300);
+const page = ref(1);
+const pageSize = 10;
+const totalCount = ref(0);
+const totalPages = computed(() =>
+  Math.max(1, Math.ceil(totalCount.value / pageSize)),
+);
 
 function toggleMenu(id: number) {
   openMenuId.value = openMenuId.value === id ? null : id;
@@ -127,23 +138,55 @@ async function fetchCategorias() {
   }
 
   loading.value = true;
-  const { data, error } = await supabase
+  errorMessage.value = "";
+
+  const searchTerm = searchQuery.value.trim();
+
+  // Consulta con count para paginación
+  let query = supabase
     .from("categorias")
     .select(
       "id, usuario_id, nombre, descripcion, tipo_ciclo, ciclo_dias, created_at",
+      { count: "exact" },
     )
     .eq("usuario_id", uid)
     .order("created_at", { ascending: false });
+
+  // Filtro server-side por nombre o descripción
+  if (searchTerm) {
+    query = query.or(
+      `nombre.ilike.%${searchTerm}%,descripcion.ilike.%${searchTerm}%`,
+    );
+  }
+
+  // Paginación
+  const from = (page.value - 1) * pageSize;
+  const to = from + pageSize - 1;
+  query = query.range(from, to);
+
+  const { data, error, count } = await query;
 
   if (error) {
     errorMessage.value = error.message;
     categorias.value = [];
   } else {
     categorias.value = (data ?? []) as Categoria[];
+    totalCount.value = count ?? 0;
   }
 
   loading.value = false;
 }
+
+function goToPage(p: number) {
+  if (p < 1 || p > totalPages.value) return;
+  page.value = p;
+  fetchCategorias();
+}
+
+watch(searchQueryDebounced, () => {
+  page.value = 1;
+  fetchCategorias();
+});
 
 function normalizeDescripcion(value: string) {
   return value.trim() || null;
@@ -279,7 +322,29 @@ watch(
           </p>
         </div>
 
-        <Button @click="openCreateDialog">Nueva categoría</Button>
+        <Button @click="openCreateDialog">
+          <IconPlus class="h-4 w-4" />
+          Nueva categoría
+        </Button>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <div class="relative w-full max-w-sm">
+          <IconSearch
+            class="text-muted-foreground pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2"
+          />
+          <Input
+            v-model="searchQuery"
+            placeholder="Buscar por nombre o descripción…"
+            class="h-9 pl-8"
+          />
+        </div>
+        <p
+          v-if="!loading && !errorMessage"
+          class="text-muted-foreground text-xs"
+        >
+          {{ totalCount }} categorías
+        </p>
       </div>
 
       <p v-if="errorMessage" class="text-sm text-destructive">
@@ -291,13 +356,13 @@ watch(
       <Table>
         <TableHeader class="bg-muted sticky top-0 z-10">
           <TableRow>
-            <TableHead class="w-12 text-center">
+            <TableHead class="hidden lg:table-cell w-12 text-center">
               <IconHash class="mx-auto h-4 w-4" />
             </TableHead>
-            <TableHead>Nombre</TableHead>
-            <TableHead class="w-48">Descripción</TableHead>
+            <TableHead class="w-1/2 sm:w-auto">Nombre</TableHead>
+            <TableHead class="hidden md:table-cell w-48">Descripción</TableHead>
             <TableHead class="w-28">Tipo</TableHead>
-            <TableHead class="w-28">Ciclo</TableHead>
+            <TableHead class="hidden sm:table-cell w-28">Ciclo</TableHead>
             <TableHead class="w-14">
               <span class="sr-only">Acciones</span>
             </TableHead>
@@ -321,12 +386,16 @@ watch(
             </TableCell>
           </TableRow>
           <TableRow v-for="categoria in categorias" :key="categoria.id">
-            <TableCell class="w-12 text-center text-xs text-muted-foreground">
+            <TableCell
+              class="hidden lg:table-cell w-12 text-center text-xs text-muted-foreground"
+            >
               {{ categoria.id }}
             </TableCell>
-            <TableCell class="font-medium">{{ categoria.nombre }}</TableCell>
-            <TableCell class="w-48 truncate">{{
-              categoria.descripcion || "Sin descripción"
+            <TableCell class="w-1/2 sm:w-auto font-medium">{{
+              categoria.nombre
+            }}</TableCell>
+            <TableCell class="hidden md:table-cell w-48 truncate">{{
+              categoria.descripcion || "—"
             }}</TableCell>
             <TableCell class="w-28">
               <Badge
@@ -345,7 +414,9 @@ watch(
                 }}
               </Badge>
             </TableCell>
-            <TableCell class="w-28 text-xs text-muted-foreground">
+            <TableCell
+              class="hidden sm:table-cell w-28 text-xs text-muted-foreground"
+            >
               {{
                 categoria.tipo_ciclo === "dias"
                   ? `${categoria.ciclo_dias} días`
@@ -394,6 +465,31 @@ watch(
           </TableRow>
         </TableBody>
       </Table>
+    </div>
+
+    <div
+      v-if="!loading && totalPages > 1"
+      class="flex items-center justify-center gap-2"
+    >
+      <Button
+        variant="outline"
+        size="sm"
+        :disabled="page <= 1"
+        @click="goToPage(page - 1)"
+      >
+        Anterior
+      </Button>
+      <span class="text-muted-foreground text-sm">
+        {{ page }} / {{ totalPages }}
+      </span>
+      <Button
+        variant="outline"
+        size="sm"
+        :disabled="page >= totalPages"
+        @click="goToPage(page + 1)"
+      >
+        Siguiente
+      </Button>
     </div>
 
     <Dialog v-model:open="formOpen">
