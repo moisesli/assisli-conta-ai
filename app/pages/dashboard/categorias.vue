@@ -10,7 +10,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import CategoriaFormDialog from "@/components/dashboard/categorias/CategoriaFormDialog.vue";
 import CategoriaDeleteDialog from "@/components/dashboard/categorias/CategoriaDeleteDialog.vue";
 import {
@@ -300,13 +299,32 @@ watch(
           <TableBody
             class="**:data-[slot=table-cell]:py-2 **:data-[slot=table-cell]:text-sm"
           >
-            <TableRow v-if="loading">
-              <TableCell
-                colspan="6"
-                class="py-8 text-center text-muted-foreground"
-                >Cargando categorías…</TableCell
-              >
-            </TableRow>
+            <template v-if="loading">
+              <TableRow v-for="i in pageSize" :key="'load-skel-' + i">
+                <TableCell class="hidden lg:table-cell w-10 text-center"
+                  ><div
+                    class="bg-primary/10 mx-auto h-6 w-4 animate-pulse rounded"
+                /></TableCell>
+                <TableCell
+                  ><div class="bg-primary/10 h-6 w-40 animate-pulse rounded"
+                /></TableCell>
+                <TableCell class="hidden md:table-cell"
+                  ><div class="bg-primary/10 h-6 w-32 animate-pulse rounded"
+                /></TableCell>
+                <TableCell class="w-24"
+                  ><div
+                    class="bg-primary/10 h-6 w-16 animate-pulse rounded-full"
+                /></TableCell>
+                <TableCell class="w-20"
+                  ><div
+                    class="bg-primary/10 h-6 w-14 animate-pulse rounded-full"
+                /></TableCell>
+                <TableCell class="w-10"
+                  ><div
+                    class="bg-primary/10 mx-auto h-6 w-5 animate-pulse rounded"
+                /></TableCell>
+              </TableRow>
+            </template>
             <TableRow
               v-if="!loading && !paginationLoading && categorias.length === 0"
             >
@@ -403,22 +421,28 @@ watch(
               </TableRow>
             </template>
             <template v-if="paginationLoading">
-              <TableRow v-for="i in 5" :key="'skel-' + i">
+              <TableRow v-for="i in pageSize" :key="'skel-' + i">
                 <TableCell class="hidden lg:table-cell w-10 text-center"
-                  ><Skeleton class="mx-auto h-4 w-4"
+                  ><div
+                    class="bg-primary/10 mx-auto h-6 w-4 animate-pulse rounded"
                 /></TableCell>
-                <TableCell><Skeleton class="h-4 w-32" /></TableCell>
+                <TableCell
+                  ><div class="bg-primary/10 h-6 w-40 animate-pulse rounded"
+                /></TableCell>
                 <TableCell class="hidden md:table-cell"
-                  ><Skeleton class="h-4 w-24"
+                  ><div class="bg-primary/10 h-6 w-32 animate-pulse rounded"
                 /></TableCell>
                 <TableCell class="w-24"
-                  ><Skeleton class="h-5 w-16 rounded-full"
+                  ><div
+                    class="bg-primary/10 h-6 w-16 animate-pulse rounded-full"
                 /></TableCell>
                 <TableCell class="w-20"
-                  ><Skeleton class="h-5 w-12 rounded-full"
+                  ><div
+                    class="bg-primary/10 h-6 w-14 animate-pulse rounded-full"
                 /></TableCell>
                 <TableCell class="w-10"
-                  ><Skeleton class="mx-auto h-4 w-4"
+                  ><div
+                    class="bg-primary/10 mx-auto h-6 w-5 animate-pulse rounded"
                 /></TableCell>
               </TableRow>
             </template>
