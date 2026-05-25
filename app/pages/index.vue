@@ -5,3 +5,7 @@ await navigateTo(user.value ? "/dashboard" : "/login", {
   replace: true,
 });
 </script>
+
+<template>
+  <div />
+</template>
