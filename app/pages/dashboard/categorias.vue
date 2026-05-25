@@ -1,16 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, reactive, ref, watch } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Table,
   TableBody,
@@ -20,6 +10,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import CategoriaFormDialog from "@/components/dashboard/categorias/CategoriaFormDialog.vue";
+import CategoriaDeleteDialog from "@/components/dashboard/categorias/CategoriaDeleteDialog.vue";
 import {
   IconCalendarMonth,
   IconCalendarRepeat,
@@ -42,8 +34,6 @@ type Categoria = {
   ciclo_dias: number | null;
   created_at: string;
 };
-
-type CategoriaInsert = Database["public"]["Tables"]["categorias"]["Insert"];
 
 const supabase = useSupabaseClient();
 const user = useSupabaseUser();
@@ -93,34 +83,15 @@ onUnmounted(() => {
   document.removeEventListener("click", handleClickOutside);
 });
 
-const form = reactive({
-  nombre: "",
-  descripcion: "",
-  tipo_ciclo: "mensual" as "mensual" | "dias",
-  ciclo_dias: "",
-});
-
-function resetForm() {
-  form.nombre = "";
-  form.descripcion = "";
-  form.tipo_ciclo = "mensual";
-  form.ciclo_dias = "";
-  activeCategory.value = null;
-}
-
 function openCreateDialog() {
   formMode.value = "create";
-  resetForm();
+  activeCategory.value = null;
   formOpen.value = true;
 }
 
 function openEditDialog(categoria: Categoria) {
   formMode.value = "edit";
   activeCategory.value = categoria;
-  form.nombre = categoria.nombre;
-  form.descripcion = categoria.descripcion ?? "";
-  form.tipo_ciclo = categoria.tipo_ciclo;
-  form.ciclo_dias = categoria.ciclo_dias?.toString() ?? "";
   formOpen.value = true;
 }
 
@@ -142,7 +113,6 @@ async function fetchCategorias() {
 
   const searchTerm = searchQuery.value.trim();
 
-  // Consulta con count para paginación
   let query = supabase
     .from("categorias")
     .select(
@@ -152,14 +122,12 @@ async function fetchCategorias() {
     .eq("usuario_id", uid)
     .order("created_at", { ascending: false });
 
-  // Filtro server-side por nombre o descripción
   if (searchTerm) {
     query = query.or(
       `nombre.ilike.%${searchTerm}%,descripcion.ilike.%${searchTerm}%`,
     );
   }
 
-  // Paginación
   const from = (page.value - 1) * pageSize;
   const to = from + pageSize - 1;
   query = query.range(from, to);
@@ -188,55 +156,18 @@ watch(searchQueryDebounced, () => {
   fetchCategorias();
 });
 
-function normalizeDescripcion(value: string) {
-  return value.trim() || null;
-}
-
-function buildPayload(): CategoriaInsert {
-  const nombre = form.nombre.trim();
-  const descripcion = normalizeDescripcion(form.descripcion);
+async function handleSave(
+  payload: Database["public"]["Tables"]["categorias"]["Insert"],
+) {
   const uid = currentUserId.value;
+  if (!uid) return;
 
-  if (!nombre) {
-    throw new Error("El nombre es obligatorio");
-  }
-
-  if (!uid) {
-    throw new Error("Usuario no autenticado");
-  }
-
-  if (form.tipo_ciclo === "dias") {
-    const cicloDias = Number(form.ciclo_dias);
-    if (!Number.isInteger(cicloDias) || cicloDias <= 0) {
-      throw new Error("El ciclo en días debe ser mayor que cero");
-    }
-
-    return {
-      nombre,
-      descripcion,
-      tipo_ciclo: form.tipo_ciclo,
-      ciclo_dias: cicloDias,
-      usuario_id: uid,
-    };
-  }
-
-  return {
-    nombre,
-    descripcion,
-    tipo_ciclo: form.tipo_ciclo,
-    ciclo_dias: null,
-    usuario_id: uid,
-  };
-}
-
-async function saveCategory() {
   errorMessage.value = "";
+  saving.value = true;
 
   try {
-    const payload = buildPayload();
-    saving.value = true;
-
     if (formMode.value === "create") {
+      payload.usuario_id = uid;
       const { error } = await supabase.from("categorias").insert(payload);
       if (error) throw error;
     } else if (activeCategory.value) {
@@ -244,12 +175,12 @@ async function saveCategory() {
         .from("categorias")
         .update(payload)
         .eq("id", activeCategory.value.id)
-        .eq("usuario_id", currentUserId.value!);
+        .eq("usuario_id", uid);
       if (error) throw error;
     }
 
     formOpen.value = false;
-    resetForm();
+    activeCategory.value = null;
     await fetchCategorias();
   } catch (error) {
     errorMessage.value =
@@ -261,10 +192,8 @@ async function saveCategory() {
   }
 }
 
-async function deleteCategory() {
-  if (!activeCategory.value) {
-    return;
-  }
+async function handleDelete() {
+  if (!activeCategory.value) return;
 
   errorMessage.value = "";
   deleting.value = true;
@@ -288,13 +217,11 @@ async function deleteCategory() {
 }
 
 async function resolveUserId() {
-  // Obtener usuario verificado desde el servidor de Auth
   const { data } = await supabase.auth.getUser();
   if (data.user?.id) {
     currentUserId.value = data.user.id;
     return true;
   }
-
   currentUserId.value = null;
   return false;
 }
@@ -303,97 +230,79 @@ watch(
   user,
   async () => {
     const resolved = await resolveUserId();
-    if (resolved) {
-      await fetchCategorias();
-    }
+    if (resolved) await fetchCategorias();
   },
   { immediate: true },
 );
 </script>
 
 <template>
-  <div class="flex flex-1 flex-col gap-6 p-4 md:p-6">
-    <section class="flex flex-col gap-2">
-      <div class="flex items-center justify-between gap-4">
-        <div>
-          <h1 class="text-2xl font-semibold tracking-tight">Categorías</h1>
-          <p class="text-muted-foreground text-sm">
-            Lista, crea, edita y elimina categorías con diálogos de shadcn.
-          </p>
+  <div class="flex flex-1 flex-col gap-4 p-4 md:p-6">
+    <div class="flex items-center justify-between gap-3">
+      <h1 class="text-2xl font-semibold tracking-tight">Categorías</h1>
+      <div class="flex items-center gap-2">
+        <div class="relative w-48">
+          <IconSearch
+            class="text-muted-foreground pointer-events-none absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2"
+          />
+          <input
+            v-model="searchQuery"
+            placeholder="Buscar…"
+            class="border-input h-9 w-full rounded-md border bg-transparent pl-8 pr-3 text-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+          />
         </div>
-
-        <Button @click="openCreateDialog">
+        <Button
+          size="sm"
+          class="h-9 gap-1.5 px-3 cursor-pointer"
+          @click="openCreateDialog"
+        >
           <IconPlus class="h-4 w-4" />
-          Nueva categoría
+          Nueva
         </Button>
       </div>
+    </div>
 
-      <div class="flex items-center gap-2">
-        <div class="relative w-full max-w-sm">
-          <IconSearch
-            class="text-muted-foreground pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2"
-          />
-          <Input
-            v-model="searchQuery"
-            placeholder="Buscar por nombre o descripción…"
-            class="h-9 pl-8"
-          />
-        </div>
-        <p
-          v-if="!loading && !errorMessage"
-          class="text-muted-foreground text-xs"
-        >
-          {{ totalCount }} categorías
-        </p>
-      </div>
-
-      <p v-if="errorMessage" class="text-sm text-destructive">
-        {{ errorMessage }}
-      </p>
-    </section>
+    <p v-if="errorMessage" class="text-xs text-destructive">
+      {{ errorMessage }}
+    </p>
 
     <div class="overflow-hidden rounded-lg border">
       <Table>
         <TableHeader class="bg-muted sticky top-0 z-10">
           <TableRow>
-            <TableHead class="hidden lg:table-cell w-12 text-center">
-              <IconHash class="mx-auto h-4 w-4" />
-            </TableHead>
-            <TableHead class="w-1/2 sm:w-auto">Nombre</TableHead>
+            <TableHead class="hidden lg:table-cell w-12 text-center"
+              ><IconHash class="mx-auto h-4 w-4"
+            /></TableHead>
+            <TableHead>Nombre</TableHead>
             <TableHead class="hidden md:table-cell w-48">Descripción</TableHead>
             <TableHead class="w-28">Tipo</TableHead>
-            <TableHead class="hidden sm:table-cell w-28">Ciclo</TableHead>
-            <TableHead class="w-14">
-              <span class="sr-only">Acciones</span>
-            </TableHead>
+            <TableHead class="hidden sm:table-cell w-24">Ciclo</TableHead>
+            <TableHead class="w-12"
+              ><span class="sr-only">Acciones</span></TableHead
+            >
           </TableRow>
         </TableHeader>
-        <TableBody class="**:data-[slot=table-cell]:first:w-8">
+        <TableBody>
           <TableRow v-if="loading">
             <TableCell
               colspan="6"
-              class="py-8 text-center text-muted-foreground"
+              class="py-10 text-center text-muted-foreground"
+              >Cargando categorías…</TableCell
             >
-              Cargando categorías...
-            </TableCell>
           </TableRow>
           <TableRow v-else-if="categorias.length === 0">
             <TableCell
               colspan="6"
-              class="py-8 text-center text-muted-foreground"
+              class="py-10 text-center text-muted-foreground"
+              >Todavía no tienes categorías.</TableCell
             >
-              Todavía no tienes categorías.
-            </TableCell>
           </TableRow>
           <TableRow v-for="categoria in categorias" :key="categoria.id">
             <TableCell
-              class="hidden lg:table-cell w-12 text-center text-xs text-muted-foreground"
+              class="hidden lg:table-cell w-12 text-center text-muted-foreground"
+              >{{ categoria.id }}</TableCell
             >
-              {{ categoria.id }}
-            </TableCell>
-            <TableCell class="w-1/2 sm:w-auto font-medium">{{
-              categoria.nombre
-            }}</TableCell>
+            <TableCell class="font-medium">{{ categoria.nombre }}</TableCell>
             <TableCell class="hidden md:table-cell w-48 truncate">{{
               categoria.descripcion || "—"
             }}</TableCell>
@@ -414,29 +323,27 @@ watch(
                 }}
               </Badge>
             </TableCell>
-            <TableCell
-              class="hidden sm:table-cell w-28 text-xs text-muted-foreground"
-            >
+            <TableCell class="hidden sm:table-cell w-24 text-muted-foreground">
               {{
                 categoria.tipo_ciclo === "dias"
                   ? `${categoria.ciclo_dias} días`
                   : "—"
               }}
             </TableCell>
-            <TableCell class="w-14" data-action-menu>
+            <TableCell class="w-12" data-action-menu>
               <div class="relative inline-flex">
                 <Button
                   variant="ghost"
                   size="icon"
-                  class="h-9 w-9"
+                  class="h-8 w-8 cursor-pointer"
                   @click.stop="toggleMenu(categoria.id)"
                 >
-                  <IconDotsVertical class="h-5 w-5" />
+                  <IconDotsVertical class="h-4 w-4" />
                   <span class="sr-only">Acciones</span>
                 </Button>
                 <div
                   v-if="openMenuId === categoria.id"
-                  class="ring-foreground/10 bg-popover text-popover-foreground absolute right-0 top-full z-50 mt-1 min-w-32 rounded-lg p-1 shadow-md ring-1"
+                  class="ring-foreground/10 bg-popover text-popover-foreground absolute right-0 top-full z-50 mt-1 min-w-28 rounded-lg p-1 shadow-md ring-1"
                 >
                   <button
                     class="hover:bg-accent hover:text-accent-foreground flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none"
@@ -445,8 +352,7 @@ watch(
                       closeMenu();
                     "
                   >
-                    <IconEdit class="h-4 w-4" />
-                    Editar
+                    <IconEdit class="h-4 w-4" /> Editar
                   </button>
                   <div class="bg-border mx-2 my-0.5 h-px" />
                   <button
@@ -456,8 +362,7 @@ watch(
                       closeMenu();
                     "
                   >
-                    <IconTrash class="h-4 w-4" />
-                    Eliminar
+                    <IconTrash class="h-4 w-4" /> Eliminar
                   </button>
                 </div>
               </div>
@@ -476,123 +381,34 @@ watch(
         size="sm"
         :disabled="page <= 1"
         @click="goToPage(page - 1)"
+        >Anterior</Button
       >
-        Anterior
-      </Button>
-      <span class="text-muted-foreground text-sm">
-        {{ page }} / {{ totalPages }}
-      </span>
+      <span class="text-muted-foreground text-xs"
+        >{{ page }} / {{ totalPages }}</span
+      >
       <Button
         variant="outline"
         size="sm"
         :disabled="page >= totalPages"
         @click="goToPage(page + 1)"
+        >Siguiente</Button
       >
-        Siguiente
-      </Button>
     </div>
 
-    <Dialog v-model:open="formOpen">
-      <DialogContent class="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>
-            {{ formMode === "create" ? "Crear categoría" : "Editar categoría" }}
-          </DialogTitle>
-          <DialogDescription>
-            Usa este modal para crear o actualizar una categoría sin salir de la
-            lista.
-          </DialogDescription>
-        </DialogHeader>
-
-        <div class="grid gap-4">
-          <div class="grid gap-2">
-            <Label for="nombre">Nombre</Label>
-            <Input
-              id="nombre"
-              v-model="form.nombre"
-              placeholder="Alimentación"
-            />
-          </div>
-
-          <div class="grid gap-2">
-            <Label for="descripcion">Descripción</Label>
-            <textarea
-              id="descripcion"
-              v-model="form.descripcion"
-              class="border-input placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 min-h-24 w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
-              placeholder="Opcional"
-            />
-          </div>
-
-          <div class="grid gap-2">
-            <Label for="tipo_ciclo">Tipo de ciclo</Label>
-            <select
-              id="tipo_ciclo"
-              v-model="form.tipo_ciclo"
-              class="border-input focus-visible:border-ring focus-visible:ring-ring/50 h-9 rounded-md border bg-background px-3 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
-            >
-              <option value="mensual">Mensual</option>
-              <option value="dias">Días</option>
-            </select>
-          </div>
-
-          <div v-if="form.tipo_ciclo === 'dias'" class="grid gap-2">
-            <Label for="ciclo_dias">Ciclo en días</Label>
-            <Input
-              id="ciclo_dias"
-              v-model="form.ciclo_dias"
-              type="number"
-              min="1"
-              placeholder="30"
-            />
-          </div>
-        </div>
-
-        <DialogFooter>
-          <Button variant="outline" @click="formOpen = false">Cancelar</Button>
-          <Button :disabled="saving" @click="saveCategory">
-            {{
-              saving
-                ? "Guardando..."
-                : formMode === "create"
-                  ? "Guardar"
-                  : "Actualizar"
-            }}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-
-    <Dialog v-model:open="deleteOpen">
-      <DialogContent class="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Eliminar categoría</DialogTitle>
-          <DialogDescription>
-            Esta acción eliminará la categoría seleccionada y no se puede
-            deshacer.
-          </DialogDescription>
-        </DialogHeader>
-
-        <div class="rounded-lg border bg-muted/40 p-4 text-sm">
-          <p class="font-medium">{{ activeCategory?.nombre }}</p>
-          <p class="text-muted-foreground mt-1">
-            {{ activeCategory?.descripcion || "Sin descripción" }}
-          </p>
-        </div>
-
-        <DialogFooter>
-          <Button variant="outline" @click="deleteOpen = false"
-            >Cancelar</Button
-          >
-          <Button
-            variant="destructive"
-            :disabled="deleting"
-            @click="deleteCategory"
-          >
-            {{ deleting ? "Eliminando..." : "Confirmar eliminación" }}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <CategoriaFormDialog
+      :open="formOpen"
+      :mode="formMode"
+      :categoria="activeCategory"
+      :saving="saving"
+      @save="handleSave"
+      @close="formOpen = false"
+    />
+    <CategoriaDeleteDialog
+      :open="deleteOpen"
+      :categoria="activeCategory"
+      :deleting="deleting"
+      @confirm="handleDelete"
+      @close="deleteOpen = false"
+    />
   </div>
 </template>

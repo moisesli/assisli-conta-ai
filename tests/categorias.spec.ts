@@ -29,9 +29,7 @@ test.describe("Categorias", () => {
     await expect(
       page.getByRole("heading", { name: "Categorías" }),
     ).toBeVisible();
-    await expect(
-      page.getByRole("button", { name: /nueva categoría/i }),
-    ).toBeVisible();
+    await expect(page.getByRole("button", { name: /^Nueva$/ })).toBeVisible();
     await expect(page.getByRole("table")).toBeVisible();
   });
 
@@ -44,7 +42,7 @@ test.describe("Categorias", () => {
     await page.goto("/dashboard/categorias");
     await page.waitForLoadState("networkidle");
 
-    await page.getByRole("button", { name: /nueva categoría/i }).click();
+    await page.getByRole("button", { name: /^Nueva$/ }).click();
     await expect(
       page.getByRole("dialog", { name: /crear categoría/i }),
     ).toBeVisible();
@@ -70,7 +68,7 @@ test.describe("Categorias", () => {
     await page.goto("/dashboard/categorias");
     await page.waitForLoadState("networkidle");
 
-    await page.getByRole("button", { name: /nueva categoría/i }).click();
+    await page.getByRole("button", { name: /^Nueva$/ }).click();
     await page.getByLabel(/nombre/i).fill(originalName);
     await page.getByLabel(/tipo de ciclo/i).selectOption("mensual");
     await page.getByRole("button", { name: /guardar/i }).click();
@@ -101,7 +99,7 @@ test.describe("Categorias", () => {
     await page.goto("/dashboard/categorias");
     await page.waitForLoadState("networkidle");
 
-    await page.getByRole("button", { name: /nueva categoría/i }).click();
+    await page.getByRole("button", { name: /^Nueva$/ }).click();
     await page.getByLabel(/nombre/i).fill(categoryName);
     await page.getByLabel(/tipo de ciclo/i).selectOption("mensual");
     await page.getByRole("button", { name: /guardar/i }).click();
@@ -132,21 +130,19 @@ test.describe("Categorias", () => {
     await page.waitForLoadState("networkidle");
 
     // Crear categoría para buscar
-    await page.getByRole("button", { name: /nueva categoría/i }).click();
+    await page.getByRole("button", { name: /^Nueva$/ }).click();
     await page.getByLabel(/nombre/i).fill(searchName);
     await page.getByLabel(/tipo de ciclo/i).selectOption("mensual");
     await page.getByRole("button", { name: /guardar/i }).click();
     await expect(page.getByText(searchName)).toBeVisible();
 
     // Buscar por nombre
-    await page.getByPlaceholder(/buscar por nombre/i).fill(searchName);
+    await page.getByPlaceholder(/buscar/i).fill(searchName);
     await page.waitForTimeout(500);
     await expect(page.getByText(searchName)).toBeVisible();
 
     // Buscar algo inexistente
-    await page
-      .getByPlaceholder(/buscar por nombre/i)
-      .fill("ZZZZ_NO_EXISTE_999");
+    await page.getByPlaceholder(/buscar/i).fill("ZZZZ_NO_EXISTE_999");
     await page.waitForTimeout(500);
     await expect(page.getByText(/todavía no tienes categorías/i)).toBeVisible();
   });
