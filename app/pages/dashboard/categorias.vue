@@ -15,6 +15,7 @@ import CategoriaDeleteDialog from "@/components/dashboard/categorias/CategoriaDe
 import {
   IconCalendarMonth,
   IconCalendarRepeat,
+  IconClock,
   IconDotsVertical,
   IconEdit,
   IconHash,
@@ -41,6 +42,7 @@ const user = useSupabaseUser();
 const categorias = ref<Categoria[]>([]);
 const currentUserId = ref<string | null>(null);
 const loading = ref(true);
+const paginationLoading = ref(false);
 const saving = ref(false);
 const deleting = ref(false);
 const errorMessage = ref("");
@@ -100,7 +102,7 @@ function openDeleteDialog(categoria: Categoria) {
   deleteOpen.value = true;
 }
 
-async function fetchCategorias() {
+async function fetchCategorias(isPageChange = false) {
   const uid = currentUserId.value;
   if (!uid) {
     categorias.value = [];
@@ -108,7 +110,8 @@ async function fetchCategorias() {
     return;
   }
 
-  loading.value = true;
+  if (!isPageChange) loading.value = true;
+  else paginationLoading.value = true;
   errorMessage.value = "";
 
   const searchTerm = searchQuery.value.trim();
@@ -143,17 +146,18 @@ async function fetchCategorias() {
   }
 
   loading.value = false;
+  paginationLoading.value = false;
 }
 
 function goToPage(p: number) {
   if (p < 1 || p > totalPages.value) return;
   page.value = p;
-  fetchCategorias();
+  fetchCategorias(true);
 }
 
 watch(searchQueryDebounced, () => {
   page.value = 1;
-  fetchCategorias();
+  fetchCategorias(false);
 });
 
 async function handleSave(
@@ -230,7 +234,7 @@ watch(
   user,
   async () => {
     const resolved = await resolveUserId();
-    if (resolved) await fetchCategorias();
+    if (resolved) await fetchCategorias(false);
   },
   { immediate: true },
 );
@@ -268,6 +272,14 @@ watch(
       </p>
 
       <div class="overflow-hidden rounded-lg border">
+        <div
+          v-if="paginationLoading"
+          class="h-0.5 w-full overflow-hidden bg-muted"
+        >
+          <div
+            class="h-full w-full animate-[loading_1s_ease-in-out_infinite] rounded-full bg-foreground/30"
+          />
+        </div>
         <Table>
           <TableHeader class="bg-muted sticky top-0 z-10">
             <TableRow>
@@ -279,7 +291,7 @@ watch(
                 >Descripción</TableHead
               >
               <TableHead class="w-24">Tipo</TableHead>
-              <TableHead class="hidden sm:table-cell w-20">Ciclo</TableHead>
+              <TableHead class="w-20">Ciclo</TableHead>
               <TableHead class="w-10"
                 ><span class="sr-only">Acciones</span></TableHead
               >
@@ -314,7 +326,7 @@ watch(
               <TableCell class="w-24">
                 <Badge
                   :variant="
-                    categoria.tipo_ciclo === 'mensual' ? 'default' : 'secondary'
+                    categoria.tipo_ciclo === 'mensual' ? 'secondary' : 'outline'
                   "
                   class="gap-1 text-xs"
                 >
@@ -328,14 +340,19 @@ watch(
                   }}
                 </Badge>
               </TableCell>
-              <TableCell
-                class="hidden sm:table-cell w-20 text-muted-foreground"
-              >
-                {{
-                  categoria.tipo_ciclo === "dias"
-                    ? `${categoria.ciclo_dias} d`
-                    : "—"
-                }}
+              <TableCell class="w-20">
+                <Badge
+                  v-if="categoria.tipo_ciclo === 'dias'"
+                  variant="outline"
+                  class="gap-1 text-xs"
+                >
+                  <IconCalendarRepeat class="h-3 w-3" />
+                  {{ categoria.ciclo_dias }} d
+                </Badge>
+                <Badge v-else variant="outline" class="gap-1 text-xs">
+                  <IconClock class="h-3 w-3" />
+                  30 d
+                </Badge>
               </TableCell>
               <TableCell class="w-10" data-action-menu>
                 <div class="relative inline-flex">
@@ -381,7 +398,7 @@ watch(
 
       <div
         v-if="!loading && totalPages > 1"
-        class="flex items-center justify-center gap-2"
+        class="flex items-center justify-end gap-2"
       >
         <Button
           variant="outline"
