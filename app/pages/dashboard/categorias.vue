@@ -237,178 +237,186 @@ watch(
 </script>
 
 <template>
-  <div class="flex flex-1 flex-col gap-4 p-4 md:p-6">
-    <div class="flex items-center justify-between gap-3">
-      <h1 class="text-2xl font-semibold tracking-tight">Categorías</h1>
-      <div class="flex items-center gap-2">
-        <div class="relative w-48">
-          <IconSearch
-            class="text-muted-foreground pointer-events-none absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2"
-          />
-          <input
-            v-model="searchQuery"
-            placeholder="Buscar…"
-            class="border-input h-9 w-full rounded-md border bg-transparent pl-8 pr-3 text-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
-          />
+  <div class="w-full max-w-5xl mx-auto">
+    <div class="flex flex-col gap-3 p-3 md:p-4">
+      <div class="flex items-center justify-between gap-3">
+        <h1 class="text-lg font-semibold tracking-tight">Categorías</h1>
+        <div class="flex items-center gap-2">
+          <div class="relative w-48">
+            <IconSearch
+              class="text-muted-foreground pointer-events-none absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2"
+            />
+            <input
+              v-model="searchQuery"
+              placeholder="Buscar…"
+              class="border-input h-9 w-full rounded-md border bg-transparent pl-8 pr-3 text-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+            />
+          </div>
+          <Button
+            size="sm"
+            class="h-9 gap-1.5 px-3 cursor-pointer"
+            @click="openCreateDialog"
+          >
+            <IconPlus class="h-4 w-4" />
+            Nueva
+          </Button>
         </div>
-        <Button
-          size="sm"
-          class="h-9 gap-1.5 px-3 cursor-pointer"
-          @click="openCreateDialog"
-        >
-          <IconPlus class="h-4 w-4" />
-          Nueva
-        </Button>
       </div>
-    </div>
 
-    <p v-if="errorMessage" class="text-xs text-destructive">
-      {{ errorMessage }}
-    </p>
+      <p v-if="errorMessage" class="text-xs text-destructive">
+        {{ errorMessage }}
+      </p>
 
-    <div class="overflow-hidden rounded-lg border">
-      <Table>
-        <TableHeader class="bg-muted sticky top-0 z-10">
-          <TableRow>
-            <TableHead class="hidden lg:table-cell w-12 text-center"
-              ><IconHash class="mx-auto h-4 w-4"
-            /></TableHead>
-            <TableHead>Nombre</TableHead>
-            <TableHead class="hidden md:table-cell w-48">Descripción</TableHead>
-            <TableHead class="w-28">Tipo</TableHead>
-            <TableHead class="hidden sm:table-cell w-24">Ciclo</TableHead>
-            <TableHead class="w-12"
-              ><span class="sr-only">Acciones</span></TableHead
-            >
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          <TableRow v-if="loading">
-            <TableCell
-              colspan="6"
-              class="py-10 text-center text-muted-foreground"
-              >Cargando categorías…</TableCell
-            >
-          </TableRow>
-          <TableRow v-else-if="categorias.length === 0">
-            <TableCell
-              colspan="6"
-              class="py-10 text-center text-muted-foreground"
-              >Todavía no tienes categorías.</TableCell
-            >
-          </TableRow>
-          <TableRow v-for="categoria in categorias" :key="categoria.id">
-            <TableCell
-              class="hidden lg:table-cell w-12 text-center text-muted-foreground"
-              >{{ categoria.id }}</TableCell
-            >
-            <TableCell class="font-medium">{{ categoria.nombre }}</TableCell>
-            <TableCell class="hidden md:table-cell w-48 truncate">{{
-              categoria.descripcion || "—"
-            }}</TableCell>
-            <TableCell class="w-28">
-              <Badge
-                :variant="
-                  categoria.tipo_ciclo === 'mensual' ? 'default' : 'secondary'
-                "
-                class="gap-1"
+      <div class="overflow-hidden rounded-lg border">
+        <Table>
+          <TableHeader class="bg-muted sticky top-0 z-10">
+            <TableRow>
+              <TableHead class="hidden lg:table-cell w-10 text-center"
+                ><IconHash class="mx-auto h-3.5 w-3.5"
+              /></TableHead>
+              <TableHead>Nombre</TableHead>
+              <TableHead class="hidden md:table-cell w-36"
+                >Descripción</TableHead
               >
-                <IconCalendarMonth
-                  v-if="categoria.tipo_ciclo === 'mensual'"
-                  class="h-3 w-3"
-                />
-                <IconCalendarRepeat v-else class="h-3 w-3" />
+              <TableHead class="w-24">Tipo</TableHead>
+              <TableHead class="hidden sm:table-cell w-20">Ciclo</TableHead>
+              <TableHead class="w-10"
+                ><span class="sr-only">Acciones</span></TableHead
+              >
+            </TableRow>
+          </TableHeader>
+          <TableBody
+            class="**:data-[slot=table-cell]:py-2 **:data-[slot=table-cell]:text-sm"
+          >
+            <TableRow v-if="loading">
+              <TableCell
+                colspan="6"
+                class="py-8 text-center text-muted-foreground"
+                >Cargando categorías…</TableCell
+              >
+            </TableRow>
+            <TableRow v-else-if="categorias.length === 0">
+              <TableCell
+                colspan="6"
+                class="py-8 text-center text-muted-foreground"
+                >Todavía no tienes categorías.</TableCell
+              >
+            </TableRow>
+            <TableRow v-for="categoria in categorias" :key="categoria.id">
+              <TableCell
+                class="hidden lg:table-cell w-10 text-center text-muted-foreground"
+                >{{ categoria.id }}</TableCell
+              >
+              <TableCell class="font-medium">{{ categoria.nombre }}</TableCell>
+              <TableCell class="hidden md:table-cell w-36 truncate">{{
+                categoria.descripcion || "—"
+              }}</TableCell>
+              <TableCell class="w-24">
+                <Badge
+                  :variant="
+                    categoria.tipo_ciclo === 'mensual' ? 'default' : 'secondary'
+                  "
+                  class="gap-1 text-xs"
+                >
+                  <IconCalendarMonth
+                    v-if="categoria.tipo_ciclo === 'mensual'"
+                    class="h-3 w-3"
+                  />
+                  <IconCalendarRepeat v-else class="h-3 w-3" />
+                  {{
+                    categoria.tipo_ciclo === "mensual" ? "Mensual" : "Por días"
+                  }}
+                </Badge>
+              </TableCell>
+              <TableCell
+                class="hidden sm:table-cell w-20 text-muted-foreground"
+              >
                 {{
-                  categoria.tipo_ciclo === "mensual" ? "Mensual" : "Por días"
+                  categoria.tipo_ciclo === "dias"
+                    ? `${categoria.ciclo_dias} d`
+                    : "—"
                 }}
-              </Badge>
-            </TableCell>
-            <TableCell class="hidden sm:table-cell w-24 text-muted-foreground">
-              {{
-                categoria.tipo_ciclo === "dias"
-                  ? `${categoria.ciclo_dias} días`
-                  : "—"
-              }}
-            </TableCell>
-            <TableCell class="w-12" data-action-menu>
-              <div class="relative inline-flex">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  class="h-8 w-8 cursor-pointer"
-                  @click.stop="toggleMenu(categoria.id)"
-                >
-                  <IconDotsVertical class="h-4 w-4" />
-                  <span class="sr-only">Acciones</span>
-                </Button>
-                <div
-                  v-if="openMenuId === categoria.id"
-                  class="ring-foreground/10 bg-popover text-popover-foreground absolute right-0 top-full z-50 mt-1 min-w-28 rounded-lg p-1 shadow-md ring-1"
-                >
-                  <button
-                    class="hover:bg-accent hover:text-accent-foreground flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none"
-                    @click.stop="
-                      openEditDialog(categoria);
-                      closeMenu();
-                    "
+              </TableCell>
+              <TableCell class="w-10" data-action-menu>
+                <div class="relative inline-flex">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    class="h-8 w-8 cursor-pointer"
+                    @click.stop="toggleMenu(categoria.id)"
                   >
-                    <IconEdit class="h-4 w-4" /> Editar
-                  </button>
-                  <div class="bg-border mx-2 my-0.5 h-px" />
-                  <button
-                    class="hover:bg-accent hover:text-accent-foreground text-destructive flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none"
-                    @click.stop="
-                      openDeleteDialog(categoria);
-                      closeMenu();
-                    "
+                    <IconDotsVertical class="h-4 w-4" />
+                    <span class="sr-only">Acciones</span>
+                  </Button>
+                  <div
+                    v-if="openMenuId === categoria.id"
+                    class="ring-foreground/10 bg-popover text-popover-foreground absolute right-0 top-full z-50 mt-1 min-w-28 rounded-lg p-1 shadow-md ring-1"
                   >
-                    <IconTrash class="h-4 w-4" /> Eliminar
-                  </button>
+                    <button
+                      class="hover:bg-accent hover:text-accent-foreground flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none"
+                      @click.stop="
+                        openEditDialog(categoria);
+                        closeMenu();
+                      "
+                    >
+                      <IconEdit class="h-4 w-4" /> Editar
+                    </button>
+                    <div class="bg-border mx-2 my-0.5 h-px" />
+                    <button
+                      class="hover:bg-accent hover:text-accent-foreground text-destructive flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none"
+                      @click.stop="
+                        openDeleteDialog(categoria);
+                        closeMenu();
+                      "
+                    >
+                      <IconTrash class="h-4 w-4" /> Eliminar
+                    </button>
+                  </div>
                 </div>
-              </div>
-            </TableCell>
-          </TableRow>
-        </TableBody>
-      </Table>
-    </div>
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </div>
 
-    <div
-      v-if="!loading && totalPages > 1"
-      class="flex items-center justify-center gap-2"
-    >
-      <Button
-        variant="outline"
-        size="sm"
-        :disabled="page <= 1"
-        @click="goToPage(page - 1)"
-        >Anterior</Button
+      <div
+        v-if="!loading && totalPages > 1"
+        class="flex items-center justify-center gap-2"
       >
-      <span class="text-muted-foreground text-xs"
-        >{{ page }} / {{ totalPages }}</span
-      >
-      <Button
-        variant="outline"
-        size="sm"
-        :disabled="page >= totalPages"
-        @click="goToPage(page + 1)"
-        >Siguiente</Button
-      >
-    </div>
+        <Button
+          variant="outline"
+          size="sm"
+          :disabled="page <= 1"
+          @click="goToPage(page - 1)"
+          >Anterior</Button
+        >
+        <span class="text-muted-foreground text-xs"
+          >{{ page }} / {{ totalPages }}</span
+        >
+        <Button
+          variant="outline"
+          size="sm"
+          :disabled="page >= totalPages"
+          @click="goToPage(page + 1)"
+          >Siguiente</Button
+        >
+      </div>
 
-    <CategoriaFormDialog
-      :open="formOpen"
-      :mode="formMode"
-      :categoria="activeCategory"
-      :saving="saving"
-      @save="handleSave"
-      @close="formOpen = false"
-    />
-    <CategoriaDeleteDialog
-      :open="deleteOpen"
-      :categoria="activeCategory"
-      :deleting="deleting"
-      @confirm="handleDelete"
-      @close="deleteOpen = false"
-    />
+      <CategoriaFormDialog
+        :open="formOpen"
+        :mode="formMode"
+        :categoria="activeCategory"
+        :saving="saving"
+        @save="handleSave"
+        @close="formOpen = false"
+      />
+      <CategoriaDeleteDialog
+        :open="deleteOpen"
+        :categoria="activeCategory"
+        :deleting="deleting"
+        @confirm="handleDelete"
+        @close="deleteOpen = false"
+      />
+    </div>
   </div>
 </template>

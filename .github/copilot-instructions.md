@@ -30,6 +30,21 @@ Antes de implementar cambios, definir una especificacion clara y verificable.
 - Si el usuario pide pruebas reales de Supabase, usar datos reales y evitar mocks salvo que el usuario los pida explicitamente.
 - Si el usuario pide un flujo de UI con shadcn, reutilizar los componentes disponibles y mantener el flujo en una sola pagina con modales/dialogs cuando sea posible.
 
+## Stack
+
+- Nuxt 4 (con `@nuxtjs/supabase`, `shadcn-nuxt`)
+- Tailwind CSS v4 (sintaxis `@import "tailwindcss"`, `@theme inline {}`, NO tailwind.config)
+- Vue 3.5 + TypeScript
+- Playwright para tests E2E
+- Estilo shadcn-vue: `new-york-v4`
+
+## Convenciones de Tailwind v4
+
+- Usar `@import "tailwindcss"`, no `@tailwind` directives.
+- Variables CSS con `@theme inline {}` y `oklch()`.
+- `w-*`, `h-*`, `p-*`, `gap-*` con la escala de espaciado de Tailwind v4.
+- Para `@container` queries usar `@container/main` en el padre y `@lg:` en el hijo.
+
 ## Formato de spec recomendado
 
 - Contexto
