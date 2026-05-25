@@ -4,6 +4,14 @@ const TEST_EMAIL = "amoiseslinares@gmail.com";
 const TEST_PASSWORD = "123456";
 
 test.describe("Auth protection (middleware)", () => {
+  test.describe("Ruta raiz", () => {
+    test("/ redirige a /login cuando no hay sesión", async ({ page }) => {
+      await page.goto("/");
+      await page.waitForLoadState("networkidle");
+      await expect(page).toHaveURL(/\/login/);
+    });
+  });
+
   test.describe("Rutas protegidas sin sesión", () => {
     test("CA1: /dashboard sin sesión redirige a /login", async ({ page }) => {
       await page.goto("/dashboard");
