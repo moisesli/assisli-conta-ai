@@ -30,7 +30,7 @@ const supabase = useSupabaseClient();
 
 const navMain = [
   { title: "Dashboard", url: "/dashboard", icon: IconDashboard },
-  { title: "Proyectos", url: "#", icon: IconFolder },
+  { title: "Categorias", url: "/dashboard/categorias", icon: IconFolder },
   { title: "Analíticas", url: "#", icon: IconChartBar },
   { title: "Equipo", url: "#", icon: IconUsers },
 ];
@@ -85,7 +85,11 @@ async function handleLogout() {
             <SidebarMenuItem v-for="item in navMain" :key="item.title">
               <SidebarMenuButton
                 as-child
-                :is-active="item.url === '/dashboard'"
+                :is-active="
+                  item.url === '/dashboard' ||
+                  (item.url === '/dashboard/categorias' &&
+                    $route.path.startsWith('/dashboard/categorias'))
+                "
                 :tooltip="item.title"
               >
                 <a :href="item.url">

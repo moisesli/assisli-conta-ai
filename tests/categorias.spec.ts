@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 const TEST_EMAIL = "amoiseslinares@gmail.com";
 const TEST_PASSWORD = "123456";
@@ -7,7 +8,7 @@ function uniqueCategoryName(prefix: string) {
   return `${prefix} ${Date.now()}`;
 }
 
-async function login(page) {
+async function login(page: Page) {
   await page.goto("/login");
   await page.waitForLoadState("networkidle");
   await page.getByPlaceholder("m@example.com").fill(TEST_EMAIL);
