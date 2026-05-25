@@ -10,6 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import CategoriaFormDialog from "@/components/dashboard/categorias/CategoriaFormDialog.vue";
 import CategoriaDeleteDialog from "@/components/dashboard/categorias/CategoriaDeleteDialog.vue";
 import {
@@ -281,14 +282,6 @@ watch(
       </p>
 
       <div class="overflow-hidden rounded-lg border">
-        <div
-          v-if="paginationLoading"
-          class="h-0.5 w-full overflow-hidden bg-muted"
-        >
-          <div
-            class="h-full w-full animate-[loading_1s_ease-in-out_infinite] rounded-full bg-foreground/30"
-          />
-        </div>
         <Table>
           <TableHeader class="bg-muted sticky top-0 z-10">
             <TableRow>
@@ -314,97 +307,127 @@ watch(
                 >Cargando categorías…</TableCell
               >
             </TableRow>
-            <TableRow v-else-if="categorias.length === 0">
+            <TableRow
+              v-if="!loading && !paginationLoading && categorias.length === 0"
+            >
               <TableCell
                 colspan="6"
                 class="py-8 text-center text-muted-foreground"
                 >Todavía no tienes categorías.</TableCell
               >
             </TableRow>
-            <TableRow v-for="categoria in categorias" :key="categoria.id">
-              <TableCell
-                class="hidden lg:table-cell w-10 text-center text-muted-foreground"
-                >{{ categoria.id }}</TableCell
-              >
-              <TableCell class="font-medium">{{ categoria.nombre }}</TableCell>
-              <TableCell class="hidden md:table-cell max-w-48 truncate">{{
-                categoria.descripcion || "—"
-              }}</TableCell>
-              <TableCell class="w-24">
-                <Badge
-                  :variant="
-                    categoria.tipo_ciclo === 'mensual' ? 'secondary' : 'outline'
-                  "
-                  class="gap-1 text-xs"
+            <template v-if="!paginationLoading">
+              <TableRow v-for="categoria in categorias" :key="categoria.id">
+                <TableCell
+                  class="hidden lg:table-cell w-10 text-center text-muted-foreground"
+                  >{{ categoria.id }}</TableCell
                 >
-                  <IconCalendarMonth
-                    v-if="categoria.tipo_ciclo === 'mensual'"
-                    class="h-3 w-3"
-                  />
-                  <IconCalendarRepeat v-else class="h-3 w-3" />
-                  {{
-                    categoria.tipo_ciclo === "mensual" ? "Mensual" : "Por días"
-                  }}
-                </Badge>
-              </TableCell>
-              <TableCell class="w-20">
-                <Badge
-                  v-if="categoria.tipo_ciclo === 'dias'"
-                  variant="outline"
-                  class="gap-1 text-xs"
-                >
-                  <IconCalendarRepeat class="h-3 w-3" />
-                  {{ categoria.ciclo_dias }} d
-                </Badge>
-                <Badge v-else variant="outline" class="gap-1 text-xs">
-                  <IconClock class="h-3 w-3" />
-                  30 d
-                </Badge>
-              </TableCell>
-              <TableCell class="w-10" data-action-menu>
-                <div class="relative inline-flex">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    class="h-8 w-8 cursor-pointer"
-                    @click.stop="toggleMenu(categoria.id)"
+                <TableCell class="font-medium">{{
+                  categoria.nombre
+                }}</TableCell>
+                <TableCell class="hidden md:table-cell max-w-48 truncate">{{
+                  categoria.descripcion || "—"
+                }}</TableCell>
+                <TableCell class="w-24">
+                  <Badge
+                    :variant="
+                      categoria.tipo_ciclo === 'mensual'
+                        ? 'secondary'
+                        : 'outline'
+                    "
+                    class="gap-1 text-xs"
                   >
-                    <IconDotsVertical class="h-4 w-4" />
-                    <span class="sr-only">Acciones</span>
-                  </Button>
-                  <div
-                    v-if="openMenuId === categoria.id"
-                    class="ring-foreground/10 bg-popover text-popover-foreground absolute right-0 top-full z-50 mt-1 min-w-28 rounded-lg p-1 shadow-md ring-1"
+                    <IconCalendarMonth
+                      v-if="categoria.tipo_ciclo === 'mensual'"
+                      class="h-3 w-3"
+                    />
+                    <IconCalendarRepeat v-else class="h-3 w-3" />
+                    {{
+                      categoria.tipo_ciclo === "mensual"
+                        ? "Mensual"
+                        : "Por días"
+                    }}
+                  </Badge>
+                </TableCell>
+                <TableCell class="w-20">
+                  <Badge
+                    v-if="categoria.tipo_ciclo === 'dias'"
+                    variant="outline"
+                    class="gap-1 text-xs"
                   >
-                    <button
-                      class="hover:bg-accent hover:text-accent-foreground flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none"
-                      @click.stop="
-                        openEditDialog(categoria);
-                        closeMenu();
-                      "
+                    <IconCalendarRepeat class="h-3 w-3" />
+                    {{ categoria.ciclo_dias }} d
+                  </Badge>
+                  <Badge v-else variant="outline" class="gap-1 text-xs">
+                    <IconClock class="h-3 w-3" />
+                    30 d
+                  </Badge>
+                </TableCell>
+                <TableCell class="w-10" data-action-menu>
+                  <div class="relative inline-flex">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      class="h-8 w-8 cursor-pointer"
+                      @click.stop="toggleMenu(categoria.id)"
                     >
-                      <IconEdit class="h-4 w-4" /> Editar
-                    </button>
-                    <div class="bg-border mx-2 my-0.5 h-px" />
-                    <button
-                      class="hover:bg-accent hover:text-accent-foreground text-destructive flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none"
-                      @click.stop="
-                        openDeleteDialog(categoria);
-                        closeMenu();
-                      "
+                      <IconDotsVertical class="h-4 w-4" />
+                      <span class="sr-only">Acciones</span>
+                    </Button>
+                    <div
+                      v-if="openMenuId === categoria.id"
+                      class="ring-foreground/10 bg-popover text-popover-foreground absolute right-0 top-full z-50 mt-1 min-w-28 rounded-lg p-1 shadow-md ring-1"
                     >
-                      <IconTrash class="h-4 w-4" /> Eliminar
-                    </button>
+                      <button
+                        class="hover:bg-accent hover:text-accent-foreground flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none"
+                        @click.stop="
+                          openEditDialog(categoria);
+                          closeMenu();
+                        "
+                      >
+                        <IconEdit class="h-4 w-4" /> Editar
+                      </button>
+                      <div class="bg-border mx-2 my-0.5 h-px" />
+                      <button
+                        class="hover:bg-accent hover:text-accent-foreground text-destructive flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none"
+                        @click.stop="
+                          openDeleteDialog(categoria);
+                          closeMenu();
+                        "
+                      >
+                        <IconTrash class="h-4 w-4" /> Eliminar
+                      </button>
+                    </div>
                   </div>
-                </div>
-              </TableCell>
-            </TableRow>
+                </TableCell>
+              </TableRow>
+            </template>
+            <template v-if="paginationLoading">
+              <TableRow v-for="i in 5" :key="'skel-' + i">
+                <TableCell class="hidden lg:table-cell w-10 text-center"
+                  ><Skeleton class="mx-auto h-4 w-4"
+                /></TableCell>
+                <TableCell><Skeleton class="h-4 w-32" /></TableCell>
+                <TableCell class="hidden md:table-cell"
+                  ><Skeleton class="h-4 w-24"
+                /></TableCell>
+                <TableCell class="w-24"
+                  ><Skeleton class="h-5 w-16 rounded-full"
+                /></TableCell>
+                <TableCell class="w-20"
+                  ><Skeleton class="h-5 w-12 rounded-full"
+                /></TableCell>
+                <TableCell class="w-10"
+                  ><Skeleton class="mx-auto h-4 w-4"
+                /></TableCell>
+              </TableRow>
+            </template>
           </TableBody>
         </Table>
       </div>
 
       <div
-        v-if="!loading && totalPages > 1"
+        v-if="!loading && !paginationLoading && totalPages > 1"
         class="flex items-center justify-end gap-2"
       >
         <Button
