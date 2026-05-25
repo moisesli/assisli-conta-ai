@@ -19,7 +19,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { IconDotsVertical } from "@tabler/icons-vue";
+import { Badge } from "@/components/ui/badge";
+import {
+  IconCalendarMonth,
+  IconCalendarRepeat,
+  IconDotsVertical,
+  IconEdit,
+  IconHash,
+  IconTrash,
+} from "@tabler/icons-vue";
 import type { Database } from "@/types/database.types";
 
 type Categoria = {
@@ -283,17 +291,22 @@ watch(
       <Table>
         <TableHeader class="bg-muted sticky top-0 z-10">
           <TableRow>
+            <TableHead class="w-12 text-center">
+              <IconHash class="mx-auto h-4 w-4" />
+            </TableHead>
             <TableHead>Nombre</TableHead>
-            <TableHead>Descripción</TableHead>
-            <TableHead>Tipo</TableHead>
-            <TableHead>Ciclo</TableHead>
-            <TableHead class="text-right">Acciones</TableHead>
+            <TableHead class="w-48">Descripción</TableHead>
+            <TableHead class="w-28">Tipo</TableHead>
+            <TableHead class="w-28">Ciclo</TableHead>
+            <TableHead class="w-14">
+              <span class="sr-only">Acciones</span>
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody class="**:data-[slot=table-cell]:first:w-8">
           <TableRow v-if="loading">
             <TableCell
-              colspan="5"
+              colspan="6"
               class="py-8 text-center text-muted-foreground"
             >
               Cargando categorías...
@@ -301,34 +314,53 @@ watch(
           </TableRow>
           <TableRow v-else-if="categorias.length === 0">
             <TableCell
-              colspan="5"
+              colspan="6"
               class="py-8 text-center text-muted-foreground"
             >
               Todavía no tienes categorías.
             </TableCell>
           </TableRow>
           <TableRow v-for="categoria in categorias" :key="categoria.id">
+            <TableCell class="w-12 text-center text-xs text-muted-foreground">
+              {{ categoria.id }}
+            </TableCell>
             <TableCell class="font-medium">{{ categoria.nombre }}</TableCell>
-            <TableCell>{{
+            <TableCell class="w-48 truncate">{{
               categoria.descripcion || "Sin descripción"
             }}</TableCell>
-            <TableCell class="capitalize">{{ categoria.tipo_ciclo }}</TableCell>
-            <TableCell>
+            <TableCell class="w-28">
+              <Badge
+                :variant="
+                  categoria.tipo_ciclo === 'mensual' ? 'default' : 'secondary'
+                "
+                class="gap-1"
+              >
+                <IconCalendarMonth
+                  v-if="categoria.tipo_ciclo === 'mensual'"
+                  class="h-3 w-3"
+                />
+                <IconCalendarRepeat v-else class="h-3 w-3" />
+                {{
+                  categoria.tipo_ciclo === "mensual" ? "Mensual" : "Por días"
+                }}
+              </Badge>
+            </TableCell>
+            <TableCell class="w-28 text-xs text-muted-foreground">
               {{
                 categoria.tipo_ciclo === "dias"
                   ? `${categoria.ciclo_dias} días`
-                  : "Mensual"
+                  : "—"
               }}
             </TableCell>
-            <TableCell class="text-right" data-action-menu>
+            <TableCell class="w-14" data-action-menu>
               <div class="relative inline-flex">
                 <Button
                   variant="ghost"
                   size="icon"
-                  class="h-8 w-8"
+                  class="h-9 w-9"
                   @click.stop="toggleMenu(categoria.id)"
                 >
-                  <IconDotsVertical class="h-4 w-4" />
+                  <IconDotsVertical class="h-5 w-5" />
                   <span class="sr-only">Acciones</span>
                 </Button>
                 <div
@@ -336,22 +368,24 @@ watch(
                   class="ring-foreground/10 bg-popover text-popover-foreground absolute right-0 top-full z-50 mt-1 min-w-32 rounded-lg p-1 shadow-md ring-1"
                 >
                   <button
-                    class="hover:bg-accent hover:text-accent-foreground flex w-full cursor-pointer items-center rounded-md px-2 py-1.5 text-sm outline-none"
+                    class="hover:bg-accent hover:text-accent-foreground flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none"
                     @click.stop="
                       openEditDialog(categoria);
                       closeMenu();
                     "
                   >
+                    <IconEdit class="h-4 w-4" />
                     Editar
                   </button>
                   <div class="bg-border mx-2 my-0.5 h-px" />
                   <button
-                    class="hover:bg-accent hover:text-accent-foreground text-destructive flex w-full cursor-pointer items-center rounded-md px-2 py-1.5 text-sm outline-none"
+                    class="hover:bg-accent hover:text-accent-foreground text-destructive flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none"
                     @click.stop="
                       openDeleteDialog(categoria);
                       closeMenu();
                     "
                   >
+                    <IconTrash class="h-4 w-4" />
                     Eliminar
                   </button>
                 </div>
